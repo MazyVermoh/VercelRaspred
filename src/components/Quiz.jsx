@@ -3,27 +3,32 @@ import { LogOut, ArrowRight, CheckCircle2, XCircle, LayoutGrid, X } from 'lucide
 
 export default function Quiz({ questions, initialIndex = 0, isFullQuiz, knownQuestions, weakQuestions, onComplete, onQuit, onAnswered, onIndexChange }) {
   const [localIndex, setLocalIndex] = useState(initialIndex);
-  const [selectedOptionId, setSelectedOptionId] = useState(null);
+  const [sessionAnswers, setSessionAnswers] = useState({});
   const [showNav, setShowNav] = useState(false);
   
   const question = questions[localIndex];
   
-  const isAnsweredGlobal = isFullQuiz ? (knownQuestions.includes(question?.question_id) || weakQuestions.includes(question?.question_id)) : false;
-  const isAnsweredThisSession = selectedOptionId !== null;
-  const isAnswered = isAnsweredThisSession || isAnsweredGlobal;
-
   useEffect(() => {
-    setSelectedOptionId(null);
     window.scrollTo(0, 0);
   }, [localIndex]);
 
   if (!questions || questions.length === 0) return null;
 
+  const sessionAnswer = sessionAnswers[question?.question_id];
+  const isAnsweredThisSession = !!sessionAnswer;
+  // Global answered only applies to the full quiz
+  const isAnsweredGlobal = isFullQuiz ? (knownQuestions.includes(question?.question_id) || weakQuestions.includes(question?.question_id)) : false;
+  const isAnswered = isAnsweredThisSession || isAnsweredGlobal;
+
   const handleOptionClick = (optionId) => {
     if (isAnswered) return;
     
-    setSelectedOptionId(optionId);
     const isCorrect = optionId === question.correct_option_id;
+    setSessionAnswers(prev => ({
+      ...prev,
+      [question.question_id]: { selectedOptionId: optionId, isCorrect }
+    }));
+    
     onAnswered(question.question_id, isCorrect, localIndex);
   };
 
@@ -45,12 +50,12 @@ export default function Quiz({ questions, initialIndex = 0, isFullQuiz, knownQue
 
   const progress = ((localIndex) / questions.length) * 100;
 
-  const getGlobalSelectedId = () => {
-    if (isAnsweredThisSession) return selectedOptionId;
+  const getDisplaySelectedId = () => {
+    if (isAnsweredThisSession) return sessionAnswer.selectedOptionId;
     if (isAnsweredGlobal) return question.correct_option_id; 
     return null;
   };
-  const displaySelectedId = getGlobalSelectedId();
+  const displaySelectedId = getDisplaySelectedId();
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 min-h-screen flex flex-col pt-8 relative">
@@ -65,12 +70,22 @@ export default function Quiz({ questions, initialIndex = 0, isFullQuiz, knownQue
             </div>
             <div className="p-4 overflow-y-auto grid grid-cols-5 gap-2 content-start pb-20">
               {questions.map((q, idx) => {
-                const isKnown = knownQuestions.includes(q.question_id);
-                const isWeak = weakQuestions.includes(q.question_id);
                 const isCurrent = idx === localIndex;
                 let bg = "bg-slate-700 text-slate-300 hover:bg-slate-600";
-                if (isKnown) bg = "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-                else if (isWeak) bg = "bg-rose-500/20 text-rose-400 border border-rose-500/30";
+                
+                if (isFullQuiz) {
+                  const isKnown = knownQuestions.includes(q.question_id);
+                  const isWeak = weakQuestions.includes(q.question_id);
+                  if (isKnown) bg = "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                  else if (isWeak) bg = "bg-rose-500/20 text-rose-400 border border-rose-500/30";
+                } else {
+                  const sessAns = sessionAnswers[q.question_id];
+                  if (sessAns) {
+                    if (sessAns.isCorrect) bg = "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                    else bg = "bg-rose-500/20 text-rose-400 border border-rose-500/30";
+                  }
+                }
+                
                 if (isCurrent) bg += " ring-2 ring-cyan-400 ring-offset-2 ring-offset-slate-800";
                 
                 return (
