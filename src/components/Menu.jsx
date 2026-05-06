@@ -1,6 +1,6 @@
-import { Brain, Play, RotateCcw, Target, BookOpen, Trash2 } from 'lucide-react';
+import { Brain, Play, Target, BookOpen, Trash2, List, FastForward } from 'lucide-react';
 
-export default function Menu({ stats, onStartFull, onPracticeWeak, onReviewMastered, onReset }) {
+export default function Menu({ stats, hasSavedState, onStartFull, onResumeFull, onPracticeWeak, onReviewMastered, onStudyList, onReset }) {
   return (
     <div className="max-w-4xl mx-auto p-6 pt-12 md:pt-20">
       <div className="text-center mb-12">
@@ -35,14 +35,34 @@ export default function Menu({ stats, onStartFull, onPracticeWeak, onReviewMaste
       </div>
 
       <div className="grid gap-4 max-w-md mx-auto">
+        {hasSavedState ? (
+          <button 
+            onClick={onResumeFull}
+            className="group flex items-center justify-between p-4 md:p-5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-900 rounded-2xl font-bold text-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-emerald-500/20"
+          >
+            <span className="flex items-center gap-3">
+              <FastForward className="w-6 h-6 fill-slate-900" /> Продолжить экзамен
+            </span>
+          </button>
+        ) : (
+          <button 
+            onClick={onStartFull}
+            className="group flex items-center justify-between p-4 md:p-5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-900 rounded-2xl font-bold text-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-emerald-500/20"
+          >
+            <span className="flex items-center gap-3">
+              <Play className="w-6 h-6 fill-slate-900" /> Начать экзамен
+            </span>
+            <span className="bg-slate-900/10 px-3 py-1 rounded-lg text-sm">{stats.total}</span>
+          </button>
+        )}
+        
         <button 
-          onClick={onStartFull}
-          className="group flex items-center justify-between p-4 md:p-5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-900 rounded-2xl font-bold text-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-emerald-500/20"
+          onClick={onStudyList}
+          className="flex items-center justify-between p-4 md:p-5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 rounded-2xl font-bold text-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
         >
           <span className="flex items-center gap-3">
-            <Play className="w-6 h-6 fill-slate-900" /> Начать полный экзамен
+            <List className="w-6 h-6" /> Список всех вопросов
           </span>
-          <span className="bg-slate-900/10 px-3 py-1 rounded-lg text-sm">{stats.total}</span>
         </button>
 
         {stats.weak > 0 && (
@@ -69,7 +89,7 @@ export default function Menu({ stats, onStartFull, onPracticeWeak, onReviewMaste
           </button>
         )}
 
-        {(stats.mastered > 0 || stats.weak > 0) && (
+        {(stats.mastered > 0 || stats.weak > 0 || hasSavedState) && (
           <button 
             onClick={onReset}
             className="flex items-center justify-center p-4 mt-6 text-slate-500 hover:text-rose-400 rounded-xl font-medium transition-colors hover:bg-slate-800/50"
@@ -78,6 +98,15 @@ export default function Menu({ stats, onStartFull, onPracticeWeak, onReviewMaste
               <Trash2 className="w-4 h-4" /> Сбросить прогресс
             </span>
           </button>
+        )}
+        
+        {hasSavedState && (
+           <button 
+             onClick={onStartFull}
+             className="flex items-center justify-center p-2 text-slate-500 hover:text-emerald-400 rounded-xl font-medium transition-colors hover:bg-slate-800/50 text-sm mt-2"
+           >
+             Начать экзамен заново
+           </button>
         )}
       </div>
     </div>
